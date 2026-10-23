@@ -1,6 +1,6 @@
 # Full-Stack Machine Learning App
 
-Salam Sir, I built a FastAPI web app using Scikit-learn and the Housing dataset.
+I built a FastAPI web app using Scikit-learn and the Housing dataset.
 
 - **Regression:** Predicts house prices.
 - **Classification:** Predicts Potential Bargain, Fair Price, or Potentially Overpriced using estimated values and asking prices.
