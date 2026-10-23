@@ -1,0 +1,149 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>House Price Prediction</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="container">
+
+    <h1>House Price Prediction</h1>
+    <p>Regression and Property Deal Classification</p>
+
+    {% for type, heading in [
+        ('regression', 'House Price Prediction'),
+        ('classification', 'Property Deal Evaluation')
+    ] %}
+
+    <form id="{{ type }}Form">
+
+        <h2>{{ heading }}</h2>
+
+        {% if type == 'classification' %}
+        <p>Enter the seller's asking price and house details to evaluate the deal.</p>
+
+        <label>Seller's Asking Price</label>
+        <input type="number" name="asking_price" min="1" required>
+        {% endif %}
+
+        <label>Area (sq. ft.)</label>
+        <input type="number" name="area" min="1" required>
+
+        <label>Bedrooms</label>
+        <input type="number" name="bedrooms" min="0" required>
+
+        <label>Bathrooms</label>
+        <input type="number" name="bathrooms" min="0" required>
+
+        <label>Stories</label>
+        <input type="number" name="stories" min="0" required>
+
+        <label>Parking Spaces</label>
+        <input type="number" name="parking" min="0" required>
+
+        <label>Furnishing Status</label>
+        <select name="furnishingstatus">
+            <option value="furnished">Furnished</option>
+            <option value="semi-furnished">Semi-Furnished</option>
+            <option value="unfurnished">Unfurnished</option>
+        </select>
+
+        <h3>Additional Features</h3>
+
+        {% for field in [
+            'mainroad', 'guestroom', 'basement',
+            'hotwaterheating', 'airconditioning', 'prefarea'
+        ] %}
+
+        <label>{{ field | title }}</label>
+        <select name="{{ field }}">
+            <option value="no">No</option>
+            <option value="yes">Yes</option>
+        </select>
+
+        {% endfor %}
+
+        <button type="submit">
+            {% if type == 'regression' %}
+                Predict House Price
+            {% else %}
+                Evaluate Property Deal
+            {% endif %}
+        </button>
+
+        <div class="result"
+             id="{{ type }}Result"
+             style="display:none"></div>
+
+    </form>
+
+    {% endfor %}
+
+</div>
+
+<script>
+    async function predict(type, form) {
+
+        const data = Object.fromEntries(new FormData(form));
+
+        const numericFields = [
+            "area", "bedrooms", "bathrooms", "stories", "parking"
+        ];
+
+        if (type === "classification") {
+            numericFields.push("asking_price");
+        }
+
+        for (const field of numericFields) {
+            data[field] = Number(data[field]);
+        }
+
+        const result = document.getElementById(type + "Result");
+
+        result.style.display = "block";
+        result.textContent = "Predicting...";
+
+        try {
+            const response = await fetch("/predict/" + type, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) {
+                throw new Error("Please check your inputs.");
+            }
+
+            const output = await response.json();
+
+            if (type === "regression") {
+                result.textContent = "Predicted House Price: " +
+                    Number(output.prediction).toLocaleString();
+            } else {
+                result.textContent = "Deal Evaluation: " +
+                    output.prediction;
+            }
+
+        } catch (error) {
+            result.textContent = error.message;
+        }
+    }
+
+    for (const type of ["regression", "classification"]) {
+
+        document.getElementById(type + "Form")
+            .addEventListener("submit", function(event) {
+
+                event.preventDefault();
+                predict(type, this);
+
+            });
+    }
+</script>
+
+</body>
+</html>
